@@ -1,62 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anonymous Message Drop</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Drop an anonymous message</title>
+<link rel="icon" href="favicon.png" />
+<style>
+  :root{
+    --bg: #0f1724;
+    --card: #0b1220;
+    --accent: #7c5cff;
+    --muted: #a6b0c3;
+    --glass: rgba(255,255,255,0.04);
+    --glass-2: rgba(255,255,255,0.02);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
+  body{background: linear-gradient(180deg,#07102a 0%, #061428 50%), var(--bg); color:#e6eef8; display:flex;align-items:center;justify-content:center;padding:24px;}
+  .wrap{width:100%;max-width:520px}
+  .card{
+    background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:14px;padding:22px;backdrop-filter: blur(6px); box-shadow: 0 6px 30px rgba(5,8,20,0.6); border:1px solid rgba(255,255,255,0.03);
+  }
+  header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .logo{
+    width:58px;height:58px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#4ab6ff);display:flex;align-items:center;justify-content:center;font-weight:700;color:#051028;
+    box-shadow: 0 6px 18px rgba(124,92,255,0.18);
+  }
+  h1{font-size:18px;margin:0}
+  p.lead{margin:6px 0 12px;color:var(--muted);font-size:14px}
+  .cta-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .btn{
+    display:inline-block;padding:12px 16px;border-radius:10px;background:linear-gradient(90deg,var(--accent),#4ab6ff);color:#021022;font-weight:600;text-decoration:none;
+    box-shadow: 0 8px 26px rgba(76,66,255,0.16);
+  }
+  .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);font-weight:600}
+  .small{font-size:13px;color:var(--muted)}
+  .embed-preview{margin-top:14px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.03)}
+  iframe{width:100%;height:500px;border:0;}
+  .foot{margin-top:12px;display:flex;justify-content:space-between;align-items:center}
+  .link{color:var(--muted);font-size:13px;text-decoration:none}
+  .toggle{
+    display:flex;align-items:center;gap:8px;background:var(--glass);padding:8px;border-radius:999px;border:1px solid rgba(255,255,255,0.02)
+  }
+  .pulse{
+    width:12px;height:12px;background:rgba(255,255,255,0.06);border-radius:50%;box-shadow:0 0 0 6px rgba(124,92,255,0.06);animation: pulse 2s infinite;
+  }
+  @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f7f8fc;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .container {
-            background: white;
-            width: 90%;
-            max-width: 450px;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-
-        h2 {
-            margin-bottom: 15px;
-        }
-
-        .btn {
-            background: #4a67f7;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 16px;
-            display: inline-block;
-            margin-top: 20px;
-        }
-
-        .btn:hover {
-            background: #3b52c5;
-        }
-    </style>
+  /* small screens */
+  @media (max-width:420px){
+    iframe{height:420px}
+  }
+</style>
 </head>
 <body>
+<div class="wrap">
+  <div class="card" id="pageCard">
+    <header>
+      <div class="logo">DM</div>
+      <div>
+        <h1>Drop Me a Message — anonymous 💬</h1>
+        <p class="lead">Quick & private. No emails. No accounts. Send with confidence.</p>
+      </div>
+    </header>
 
-    <div class="container">
-        <h2>Send Me an Anonymous Message 💬</h2>
-        <p>Your identity will NOT be collected.</p>
+    <div class="cta-row">
+      <a class="btn" id="openFormBtn" target="_blank" rel="noopener"
+         href="https://docs.google.com/forms/d/e/1FAIpQLSeiNLY94zD2_w1sBXsFifMw87ewBfYm0JW0lCQ7phnkVwF9Ig/viewform">
+         Drop Message
+      </a>
 
-        <a class="btn" href="https://forms.gle/JrdtFX9N47mLNKfAA" target="_blank">
-            Drop Message
-        </a>
+      <a class="btn secondary" id="embedToggle" href="#" onclick="toggleEmbed();return false;">Embed form below</a>
+
+      <a class="btn secondary" href="admin.html">Admin</a>
     </div>
 
+    <div class="embed-preview" id="embedWrap" style="display:none;margin-top:14px;">
+      <iframe id="formFrame" src="" title="Anonymous message form (embedded)"></iframe>
+    </div>
+
+    <div class="foot">
+      <div class="small">Share this link: <span id="shareLink">https://YOUR-USERNAME.github.io/anon/</span></div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <div class="toggle" title="Site status">
+          <div class="pulse"></div>
+          <div style="font-size:13px;color:var(--muted)">Live</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const longFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLSeiNLY94zD2_w1sBXsFifMw87ewBfYm0JW0lCQ7phnkVwF9Ig/viewform";
+
+  document.getElementById("openFormBtn").href = longFormUrl;
+  document.getElementById("shareLink").textContent = location.href;
+
+  function toggleEmbed(){
+    const wrap = document.getElementById("embedWrap");
+    const frame = document.getElementById("formFrame");
+    if(wrap.style.display === "none"){
+      frame.src = longFormUrl + "?embedded=true";
+      wrap.style.display = "block";
+      document.getElementById("embedToggle").textContent = "Hide embed";
+    } else {
+      wrap.style.display = "none";
+      frame.src = "";
+      document.getElementById("embedToggle").textContent = "Embed form below";
+    }
+  }
+</script>
 </body>
 </html>
