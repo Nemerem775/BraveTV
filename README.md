@@ -1,10 +1,10 @@
 # Anonymous drop — GitHub Pages site
 
-1. Create a public repo (name doesn't matter).
+1. Create a public repo.
 2. Add `index.html` and `admin.html` (and `favicon.png` optional).
 3. Commit and push.
 4. Settings → Pages → Source → main branch / root → Save.
-5. Visit https://YOUR-USERNAME.github.io/REPO-NAME/
+5. Visit https://Nemerem775.github.io/BraveTV/
 
 Admin:
 - Open `admin.html`, enter the admin password you set in the file.
