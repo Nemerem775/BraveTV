@@ -1,78 +1,229 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin - Anonymous Messages</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Admin — Anonymous Messages (Firebase)</title>
+<link rel="icon" href="favicon.png" />
 <style>
 :root{
-  --bg: #0b1220;
+  --bg: #0f1724;
+  --card: #0b1220;
   --accent: #7c5cff;
   --text: #e6eef8;
-  --card-bg: rgba(255,255,255,0.05);
+  --muted: #a6b0c3;
+  --card-contrast: rgba(255,255,255,0.03);
+  --new-bg: rgba(124,92,255,0.14);
 }
-*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,sans-serif;}
-body{background: var(--bg); color: var(--text); min-height:100vh; padding:20px;}
-h1{text-align:center;margin-bottom:20px;color:var(--accent);}
-#messages{display:flex;flex-direction:column;gap:12px;max-width:600px;margin:0 auto;}
-.message-card{background: var(--card-bg); padding:12px 16px; border-radius:12px; backdrop-filter: blur(6px); box-shadow:0 4px 15px rgba(0,0,0,0.3); word-wrap: break-word; opacity:1; transition: background 0.4s, transform 0.4s;}
-.message-card.new{background:#7c5cff44;transform:scale(1.03);animation:flash 1s ease forwards;}
-@keyframes flash{0%{background:#7c5cff44;transform:scale(1.03);}50%{background:var(--card-bg);transform:scale(1);}100%{background:var(--card-bg);transform:scale(1);}}
-.message-card time{display:block;font-size:12px;color:#a6b0c3;margin-bottom:6px;}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text)}
+.container{max-width:920px;margin:18px auto;padding:18px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.title{font-size:20px;color:var(--accent);margin:0}
+.hint{color:var(--muted);font-size:13px}
+.feed{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.card{
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius:12px;padding:12px;border:1px solid var(--card-contrast);box-shadow:0 6px 20px rgba(0,0,0,0.45)
+}
+.meta{font-size:12px;color:var(--muted);margin-bottom:8px}
+.msg{white-space:pre-wrap;font-size:15px;line-height:1.35}
+.controls{display:flex;gap:8px;margin-top:10px}
+.btn{padding:8px 10px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+.btn.delete{background:#ff6b6b;color:white}
+.btn.copy{background:#7c5cff;color:#021028}
+.btn.refresh{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.03);padding:6px 10px;border-radius:8px}
+.new { background: var(--new-bg); transform: scale(1.02); transition: transform 0.36s ease; }
+.notice{margin:8px 0 14px;color:var(--muted);font-size:13px}
+.top-actions{display:flex;gap:8px;align-items:center}
+.search{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)}
+.empty{color:var(--muted);text-align:center;padding:24px;background:transparent;border-radius:8px}
 </style>
 </head>
 <body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1 class="title">Anonymous Messages — Admin</h1>
+        <div class="hint">Live feed (powered by Firebase). New messages appear instantly.</div>
+      </div>
+      <div class="top-actions">
+        <input id="searchInput" class="search" placeholder="Filter messages (text search)" />
+        <button class="btn refresh" id="refreshBtn" title="Manual refresh">Refresh</button>
+      </div>
+    </div>
 
-<h1>Anonymous Messages</h1>
-<div id="messages">Loading messages...</div>
+    <div class="notice">Tip: use the Search box to filter. Click <strong>Copy</strong> to copy message text. Click <strong>Delete</strong> to remove a message.</div>
 
-<script>
-// ====== PASSWORD PROTECTION ======
-const ADMIN_PASSWORD = "BraveTV123"; // change this
-let entered = prompt("Enter admin password:");
+    <div id="feed" class="feed"></div>
+    <div id="emptyNotice" class="empty" style="display:none">No messages yet.</div>
+  </div>
+
+<!-- Firebase (modular) -->
+<script type="module">
+// ====== ADMIN PASSWORD - change this before publishing ======
+const ADMIN_PASSWORD = "BraveTV123"; // <<--- CHANGE THIS
+
+// ====== FIREBASE CONFIG (your config inserted) ======
+const firebaseConfig = {
+  apiKey: "AIzaSyBDghLMCVjX9bMTNE2XtGcNRfPfrhGmY7I",
+  authDomain: "messages-c430e.firebaseapp.com",
+  projectId: "messages-c430e",
+  storageBucket: "messages-c430e.firebasestorage.app",
+  messagingSenderId: "307785062866",
+  appId: "1:307785062866:web:4cee0f0d50a9922705d00b"
+};
+
+// ====== IMPORTS ======
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore, collection, query, orderBy, onSnapshot, getDocs,
+  doc, deleteDoc, limit
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ====== INITIALIZE ======
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ====== PASSWORD PROMPT (simple client-side protection) ======
+const entered = prompt("Admin access — enter password:");
 if(entered !== ADMIN_PASSWORD){
-  alert("Incorrect password! Access denied.");
+  alert("Wrong password — redirecting to homepage.");
   window.location.href = "index.html";
+  throw new Error("Unauthorized");
 }
 
-// ====== FETCH MESSAGES ======
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJttttmAMGvcueET4A7270rl4IejwAthjg00fg0YPoMS6BhcpthFctbRunwCazY2pgXA/exec';
-let latestTimestamp = 0;
+// ====== UI ELEMENTS ======
+const feedEl = document.getElementById('feed');
+const emptyEl = document.getElementById('emptyNotice');
+const refreshBtn = document.getElementById('refreshBtn');
+const searchInput = document.getElementById('searchInput');
 
-async function fetchMessages(){
-  try{
-    const res = await fetch(APPS_SCRIPT_URL);
-    const data = await res.json();
-    const container = document.getElementById('messages');
-    if(!Array.isArray(data)||data.length===0){container.innerHTML='<p>No messages yet.</p>';return;}
-    container.innerHTML='';
+let lastSeenTimestamp = 0;
+let allMessages = []; // cached messages for search/filtering
 
-    data.forEach(msg=>{
-      const card=document.createElement('div');
-      card.className='message-card';
-      const msgTime = new Date(msg.time).getTime();
-      if(msgTime>latestTimestamp) card.classList.add('new');
+// ====== UTILS ======
+function formatTime(ts){
+  try {
+    const d = new Date(ts);
+    if(isNaN(d)) return String(ts);
+    return d.toLocaleString();
+  } catch(e){ return String(ts); }
+}
 
-      const timeElem=document.createElement('time');
-      timeElem.textContent=new Date(msg.time).toLocaleString();
-      const content=document.createElement('div');
-      content.textContent=msg.message;
-      card.appendChild(timeElem);
-      card.appendChild(content);
-      container.appendChild(card);
+function el(tag, className){ const e = document.createElement(tag); if(className) e.className = className; return e; }
 
-      if(msgTime>latestTimestamp) latestTimestamp=msgTime;
-    });
-  }catch(err){
-    console.error(err);
-    document.getElementById('messages').innerHTML='<p>Error loading messages.</p>';
+// ====== RENDER ======
+function renderMessages(msgs){
+  feedEl.innerHTML = '';
+  if(!msgs || msgs.length === 0){
+    emptyEl.style.display = "block";
+    return;
+  }
+  emptyEl.style.display = "none";
+
+  msgs.forEach(docData => {
+    const id = docData.id;
+    const time = docData.time;
+    const text = docData.text || docData.message || docData.msg || "";
+
+    const card = el('div','card');
+    // highlight new
+    if(time && (typeof time === 'number' ? time : Date.parse(time)) > lastSeenTimestamp){
+      card.classList.add('new');
+      // remove highlight after animation
+      setTimeout(()=> card.classList.remove('new'), 1500);
+    }
+
+    const meta = el('div','meta');
+    meta.textContent = formatTime(time || Date.now());
+    const msgDiv = el('div','msg');
+    msgDiv.textContent = text;
+
+    const controls = el('div','controls');
+
+    const copyBtn = el('button','btn copy');
+    copyBtn.textContent = 'Copy';
+    copyBtn.title = 'Copy message text';
+    copyBtn.onclick = () => {
+      navigator.clipboard?.writeText(text).then(()=> {
+        copyBtn.textContent = 'Copied';
+        setTimeout(()=> copyBtn.textContent = 'Copy', 1200);
+      }).catch(()=> alert('Copy failed'));
+    };
+
+    const delBtn = el('button','btn delete');
+    delBtn.textContent = 'Delete';
+    delBtn.title = 'Delete this message';
+    delBtn.onclick = async () => {
+      if(!confirm('Delete this message? This cannot be undone.')) return;
+      try {
+        await deleteDoc(doc(db, 'messages', id));
+      } catch(err){
+        console.error(err);
+        alert('Failed to delete message.');
+      }
+    };
+
+    controls.appendChild(copyBtn);
+    controls.appendChild(delBtn);
+
+    card.appendChild(meta);
+    card.appendChild(msgDiv);
+    card.appendChild(controls);
+
+    feedEl.appendChild(card);
+
+    // update lastSeenTimestamp
+    const t = (typeof time === 'number') ? time : Date.parse(time);
+    if(t && t > lastSeenTimestamp) lastSeenTimestamp = t;
+  });
+}
+
+// ====== REAL-TIME LISTENER ======
+const messagesRef = collection(db, 'messages');
+const q = query(messagesRef, orderBy('time', 'desc'), limit(500)); // latest 500
+const unsubscribe = onSnapshot(q, snapshot => {
+  // convert snapshot to array of objects { id, ...data }
+  const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  allMessages = docs; // keep cached copy (already newest-first)
+  applyFilterAndRender();
+}, err => {
+  console.error('Realtime error', err);
+  alert('Realtime listener error - check console.');
+});
+
+// ====== FILTER/SEARCH ======
+function applyFilterAndRender(){
+  const qText = (searchInput.value || '').trim().toLowerCase();
+  if(!qText){
+    renderMessages(allMessages);
+  } else {
+    const filtered = allMessages.filter(m => (m.text || m.message || '').toLowerCase().includes(qText));
+    renderMessages(filtered);
   }
 }
 
-// Initial fetch & interval refresh
-fetchMessages();
-setInterval(fetchMessages,10000);
-</script>
+// ====== MANUAL REFRESH (fallback) ======
+refreshBtn.onclick = async () => {
+  try {
+    // fallback read
+    const snapshot = await getDocs(q);
+    const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    allMessages = docs;
+    applyFilterAndRender();
+  } catch(err){
+    console.error(err);
+    alert('Failed to refresh: ' + err.message);
+  }
+};
 
+// ====== EVENTS ======
+searchInput.addEventListener('input', () => applyFilterAndRender());
+
+// cleanup on page unload
+window.addEventListener('beforeunload', ()=> { unsubscribe(); });
+
+</script>
 </body>
 </html>
