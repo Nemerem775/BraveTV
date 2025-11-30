@@ -213,7 +213,7 @@ document.getElementById('anonForm').addEventListener('submit', function(e){
   if(msg === '') return alert('Message cannot be empty!');
 
   // Send to Google Sheets via Apps Script
-  fetch('YOUR_APPS_SCRIPT_URL', { // Replace with your Apps Script URL
+  fetch('https://script.google.com/macros/s/AKfycbzPBQUGrvokbmO9N1zD5zwW6567D0nUddav8dvD-CPXP3ycspG1S7inCoewVZHrb4tAYw/exec', { // Replace with your Apps Script URL
     method: 'POST',
     body: JSON.stringify({message: msg})
   })
