@@ -5,163 +5,169 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Drop Anonymous Messages</title>
 <style>
-  :root{
-    --bg: #0b1220;
-    --accent: #7c5cff;
-    --accent2: #4ab6ff;
-    --text: #e6eef8;
-    --glass: rgba(255,255,255,0.04);
-  }
+:root{
+  --bg: #0b1220;
+  --accent: #7c5cff;
+  --accent2: #4ab6ff;
+  --text: #e6eef8;
+  --glass: rgba(255,255,255,0.04);
+}
 
-  *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,sans-serif;}
-  body{
-    background: var(--bg);
-    color: var(--text);
-    overflow:hidden;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-  }
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,sans-serif;}
+body{
+  background: var(--bg);
+  color: var(--text);
+  overflow:hidden;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
 
-  canvas{
-    position:absolute;
-    top:0; left:0;
-    width:100%;
-    height:100%;
-    z-index:0;
-  }
+canvas{
+  position:absolute;
+  top:0; left:0;
+  width:100%;
+  height:100%;
+  z-index:0;
+}
 
-  .card{
-    position:relative;
-    z-index:1;
-    background: var(--glass);
-    backdrop-filter: blur(12px);
-    border-radius:16px;
-    padding:30px;
-    width:90%;
-    max-width:480px;
-    text-align:center;
-    box-shadow:0 12px 40px rgba(0,0,0,0.5);
-    transform: translateY(-20px);
-    animation:slideUp 0.8s ease forwards;
-  }
+.card{
+  position:relative;
+  z-index:1;
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border-radius:16px;
+  padding:30px;
+  width:90%;
+  max-width:480px;
+  text-align:center;
+  box-shadow:0 12px 40px rgba(0,0,0,0.5);
+  transform: translateY(-20px);
+  animation:slideUp 0.8s ease forwards;
+}
 
-  @keyframes slideUp{
-    0%{opacity:0;transform:translateY(40px);}
-    100%{opacity:1;transform:translateY(0);}
-  }
+@keyframes slideUp{
+  0%{opacity:0;transform:translateY(40px);}
+  100%{opacity:1;transform:translateY(0);}
+}
 
-  /* Logo animation */
-  .logo{
-    width:80px;
-    height:80px;
-    margin:0 auto 12px auto;
-    border-radius:16px;
-    object-fit:contain;
-    border:2px solid rgba(255,255,255,0.2);
-    animation:logoPulse 2s infinite ease-in-out, floatUpDown 3s infinite ease-in-out;
-  }
+/* Logo animation */
+.logo{
+  width:80px;
+  height:80px;
+  margin:0 auto 12px auto;
+  border-radius:16px;
+  object-fit:contain;
+  border:2px solid rgba(255,255,255,0.2);
+  animation:logoPulse 2s infinite ease-in-out, floatUpDown 3s infinite ease-in-out;
+}
 
-  @keyframes logoPulse{
-    0%,100%{transform: scale(1);}
-    50%{transform: scale(1.1);}
-  }
+@keyframes logoPulse{
+  0%,100%{transform: scale(1);}
+  50%{transform: scale(1.1);}
+}
 
-  @keyframes floatUpDown{
-    0%,100%{transform: translateY(0);}
-    50%{transform: translateY(-8px);}
-  }
+@keyframes floatUpDown{
+  0%,100%{transform: translateY(0);}
+  50%{transform: translateY(-8px);}
+}
 
-  h1{
-    margin-bottom:12px;
-    font-size:22px;
-    color:var(--accent);
-  }
+h1{
+  margin-bottom:12px;
+  font-size:22px;
+  color:var(--accent);
+}
 
-  p{
-    font-size:14px;
-    color:#a6b0c3;
-    margin-bottom:20px;
-  }
+p{
+  font-size:14px;
+  color:#a6b0c3;
+  margin-bottom:20px;
+}
 
-  .btn{
-    padding:14px 20px;
-    border-radius:12px;
-    background: linear-gradient(90deg,var(--accent),var(--accent2));
-    color:#021028;
-    font-weight:700;
-    font-size:14px;
-    text-decoration:none;
-    display:inline-block;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
+.btn{
+  padding:14px 20px;
+  border-radius:12px;
+  background: linear-gradient(90deg,var(--accent),var(--accent2));
+  color:#021028;
+  font-weight:700;
+  font-size:14px;
+  text-decoration:none;
+  display:inline-block;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor:pointer;
+}
 
-  .btn:hover{
-    transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(124,92,255,0.4);
-  }
+.btn:hover{
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(124,92,255,0.4);
+}
 
-  /* Modal styling */
-  .modal{
-    display:none;
-    position:fixed;
-    top:0; left:0; right:0; bottom:0;
-    background: rgba(0,0,0,0.6);
-    justify-content:center;
-    align-items:center;
-    z-index:1000;
-  }
+/* Modal styling */
+.modal{
+  display:none;
+  position:fixed;
+  top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.6);
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+}
 
-  .modal-content{
-    width:90%;
-    max-width:600px;
-    background: var(--glass);
-    border-radius:16px;
-    overflow:hidden;
-    padding:20px;
-    backdrop-filter: blur(12px);
-    animation:modalIn 0.4s ease forwards;
-  }
+.modal-content{
+  width:90%;
+  max-width:600px;
+  background: var(--glass);
+  border-radius:16px;
+  overflow:hidden;
+  padding:20px;
+  backdrop-filter: blur(12px);
+  animation:modalIn 0.4s ease forwards;
+}
 
-  @keyframes modalIn{
-    0%{opacity:0;transform:translateY(50px);}
-    100%{opacity:1;transform:translateY(0);}
-  }
+@keyframes modalIn{
+  0%{opacity:0;transform:translateY(50px);}
+  100%{opacity:1;transform:translateY(0);}
+}
 
-  iframe{
-    width:100%;
-    height:480px;
-    border:none;
-    border-radius:12px;
-  }
+textarea{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:none;
+  resize:none;
+  margin-bottom:12px;
+  background:rgba(255,255,255,0.05);
+  color:var(--text);
+  font-size:14px;
+}
 
-  .close-btn{
-    display:block;
-    margin-top:10px;
-    background:#ff5f5f;
-    color:#fff;
-    border:none;
-    padding:8px 12px;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:600;
-  }
+.close-btn{
+  display:block;
+  margin-top:10px;
+  background:#ff5f5f;
+  color:#fff;
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:600;
+}
 
-  /* Hidden Admin Link */
-  .admin-link{
-    position:absolute;
-    bottom:10px;
-    right:10px;
-    font-size:12px;
-    color:rgba(255,255,255,0.2);
-    text-decoration:none;
-    z-index:2;
-  }
+/* Hidden Admin Link */
+.admin-link{
+  position:absolute;
+  bottom:10px;
+  right:10px;
+  font-size:12px;
+  color:rgba(255,255,255,0.2);
+  text-decoration:none;
+  z-index:2;
+}
 
-  .admin-link:hover{
-    color:rgba(255,255,255,0.5);
-  }
+.admin-link:hover{
+  color:rgba(255,255,255,0.5);
+}
 </style>
 </head>
 <body>
@@ -173,14 +179,18 @@
   <img src="favicon.png" alt="Logo" class="logo">
 
   <h1>💬 Drop Me a Message</h1>
-  <p>Quick, anonymous, and private. Click below to send your thoughts safely!</p>
-  <a href="#" class="btn" onclick="openModal()">Send Message</a>
+  <p>Quick, anonymous, and private. Click below to send your Confessions safely!</p>
+  <button class="btn" onclick="openModal()">Send Message</button>
 </div>
 
-<!-- Modal -->
+<!-- Modal with Custom Form -->
 <div class="modal" id="formModal">
   <div class="modal-content">
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeiNLY94zD2_w1sBXsFifMw87ewBfYm0JW0lCQ7phnkVwF9Ig/viewform?embedded=true"></iframe>
+    <h2>Send Anonymous Message</h2>
+    <form id="anonForm">
+      <textarea id="message" placeholder="Type your message..." rows="5" required></textarea>
+      <button type="submit" class="btn">Send</button>
+    </form>
     <button class="close-btn" onclick="closeModal()">Close</button>
   </div>
 </div>
@@ -196,7 +206,27 @@ function closeModal(){
   document.getElementById('formModal').style.display='none';
 }
 
-// ===== Floating Particles/Confetti =====
+// Custom form submission
+document.getElementById('anonForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const msg = document.getElementById('message').value.trim();
+  if(msg === '') return alert('Message cannot be empty!');
+
+  // Send to Google Sheets via Apps Script
+  fetch('YOUR_APPS_SCRIPT_URL', { // Replace with your Apps Script URL
+    method: 'POST',
+    body: JSON.stringify({message: msg})
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert('Message sent successfully!');
+    this.reset();
+    closeModal();
+  })
+  .catch(err => alert('Error sending message!'));
+});
+
+// Floating Particles
 const canvas = document.getElementById('bgCanvas');
 const ctx = canvas.getContext('2d');
 let particles = [];
@@ -208,7 +238,6 @@ function resizeCanvas(){
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// Create particles
 for(let i=0;i<100;i++){
   particles.push({
     x: Math.random()*canvas.width,
