@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<body>
+<button id="sendBtn">Send test message</button>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBDghLMCVjX9bMTNE2XtGcNRfPfrhGmY7I",
+  authDomain: "messages-c430e.firebaseapp.com",
+  projectId: "messages-c430e",
+  storageBucket: "messages-c430e.firebasestorage.app",
+  messagingSenderId: "307785062866",
+  appId: "1:307785062866:web:4cee0f0d50a9922705d00b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+document.getElementById("sendBtn").onclick = async () => {
+  try {
+    await addDoc(collection(db, "messages"), {
+      text: "Test message",
+      time: Date.now()
+    });
+    alert("Message sent!");
+  } catch (err) {
+    alert("Error: " + err);
+  }
+};
+</script>
+</body>
+</html>
